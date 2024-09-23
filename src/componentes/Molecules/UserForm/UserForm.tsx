@@ -1,98 +1,122 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Input from "../../Atoms/Input/Input";
 import Button from "../../Atoms/Button/Button";
-import { LoginForm, RegisterForm } from '../../../models/interfaces/UserFormModels';
 import "./UserForm.scss";
 
 /**
- * TODOS
- * Accesibilidad: etiqueta label adecuada para mejorar la accesibilidad.
-   Validaciones avanzadas: implementar validaciones más complejas como la longitud mínima de la contraseña o la validación del formato del correo electrónico.
-   Manejo de estados de carga:  agregar un estado de carga (loading) para deshabilitar el botón mientras se envían los datos.
- */
-
-/**
- * @param {type} - string que define el tipo de formulario registro o login
- * @param {handleSubmit} - funcion que maneja el submit del formulario.
+ * Interfaz que define los campos de un formulario.
  * 
+ * @typedef {Object} FormField
+ * @property {string} name - Nombre del campo, que debe coincidir con la clave del formData.
+ * @property {string} label - Etiqueta que se mostrará junto al campo.
+ * @property {string} type - Tipo de input (e.g., "text", "password", "email").
+ * @property {string} placeholder - Texto de ejemplo que aparecerá dentro del input.
+ * @property {boolean} [required] - Si el campo es obligatorio o no.
+ * @property {function} [validation] - Función de validación personalizada, recibe el valor del campo y retorna un string en caso de error o null si es válido.
  */
-
-interface UserFormTypeProps {
-    type: 'login' | 'register';
-    handleSubmit: (data: LoginForm | RegisterForm) => void;
+interface FormField {
+    name: string;
+    label: string;
+    type: string;
+    placeholder: string;
+    required?: boolean;
+    validation?: (value: string) => string | null;
 }
 
-const UserForm: React.FC<UserFormTypeProps> = ({ type, handleSubmit }) => {
+/**
+ * Props para el componente de formulario genérico.
+ * 
+ * @typedef {Object} GenericFormProps
+ * @property {FormField[]} fields - Array de objetos que definen los campos del formulario.
+ * @property {string} submitLabel - Etiqueta que aparecerá en el botón de submit.
+ * @property {function(Object): void} handleSubmit - Función que se llama cuando el formulario es enviado con éxito.
+ */
+interface UserFormProps {
+    fields: FormField[];
+    submitLabel: string;
+    handleSubmit: (data: { [key: string]: string }) => void;
+}
 
-    const formType = type === 'login' ?
-        { username: '', password: '' } :
-        { username: '', email: '', password: '' };
+/**
+ * Componente de formulario genérico que se puede reutilizar para diferentes propósitos (login, registro, perfil, etc.).
+ * 
+ * @component
+ * @param {GenericFormProps} props - Propiedades del componente.
+ * @returns {JSX.Element} Un formulario dinámico.
+ */
+const UserForm: React.FC<UserFormProps> = ({ fields, submitLabel, handleSubmit }) => {
 
-    const [formData, setFormData] = useState<LoginForm | RegisterForm>(formType);
-    const [error, setError] = useState<string | null>(null);
+    // Estado inicial basado en los campos definidos.
+    const initialState = fields.reduce((acc, field) => {
+        acc[field.name] = '';
+        return acc;
+    }, {} as { [key: string]: string });
 
+    const [formData, setFormData] = useState(initialState);
+    const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
+
+    /**
+     * Manejador de cambios de los campos del formulario.
+     * 
+     * @param {React.ChangeEvent<HTMLInputElement>} e - Evento que se dispara al cambiar un input.
+     */
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        if (name) {
-            // setFormData(prevState => ({ ...prevState, [name]: value }));
-            setFormData(({ ...formData, [name]: value }));
+        setFormData({
+            ...formData,
+            [name]: value,
+        });
+    };
 
-        } else {
-            console.warn("Input field without name attribute.");
-        }
-    }
-
+    /**
+     * Valida el formulario revisando los campos requeridos y las validaciones personalizadas.
+     * 
+     * @returns {boolean} Devuelve true si todos los campos son válidos; de lo contrario, false.
+     */
     const validateForm = (): boolean => {
-        if (!formData.username || !formData.password) {
-            setError('Username and password are required');
-            return false;
-        }
-        if (type === 'register' && !(formData as RegisterForm).email) {
-            setError('Email is required');
-            return false;
-        }
-        setError(null);
-        return true;
-    }
+        const newErrors: { [key: string]: string | null } = {};
+        fields.forEach(field => {
+            if (field.required && !formData[field.name]) {
+                newErrors[field.name] = `${field.label} is required`;
+            } else if (field.validation) {
+                newErrors[field.name] = field.validation(formData[field.name]);
+            }
+        });
 
+        setErrors(newErrors);
+        return !Object.values(newErrors).some(error => error !== null);
+    };
+
+    /**
+     * Manejador del submit del formulario.
+     * 
+     * @param {React.FormEvent} e - Evento que se dispara al hacer submit del formulario.
+     */
     const onSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (validateForm()) {
-            handleSubmit(formData);
+            handleSubmit(formData);  // Pasa los datos validados al handler.
         }
-    }
+    };
 
     return (
         <form onSubmit={onSubmit}>
-            <Input
-                type='text'
-                name='username'
-                value={formData.username}
-                onChange={handleInputChange}
-                placeholder='Username'
-            />
-            {type === 'register' &&
-                <Input
-                    type="email"
-                    name="email"
-                    placeholder="example@youremail.com"
-                    value={(formData as RegisterForm).email}
-                    onChange={handleInputChange}
-                />}
-            <Input
-                type="password"
-                name="password"
-                placeholder="********"
-                value={formData.password}
-                onChange={handleInputChange}
-            />
-            {error && <p style={{ color: 'red' }}>{error}</p>}
-            <Button
-                type="submit"
-                label={type === 'login' ? 'login' : 'register'}
-            />
+            {fields.map(field => (
+                <div key={field.name}>
+                    <Input
+                        type={field.type}
+                        name={field.name}
+                        label={field.label}
+                        placeholder={field.placeholder}
+                        value={formData[field.name]}
+                        onChange={handleInputChange}
+                    />
+                    {errors[field.name] && <p style={{ color: 'red' }}>{errors[field.name]}</p>}
+                </div>
+            ))}
+            <Button type="submit" label={submitLabel} />
         </form>
     );
-}
+};
 
 export default UserForm;

@@ -1,5 +1,5 @@
 import React from 'react';
-
+import './Input.scss';
 /**
  *  Input reutilizable
  *  @param {string} name - Define el name del input
@@ -14,6 +14,7 @@ interface InputTypeProps {
     type: string;
     placeholder: string;
     value: string;
+    label: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -22,16 +23,21 @@ const Input: React.FC<InputTypeProps> = ({
     type,
     placeholder,
     value,
+    label,
     onChange,
 }) => {
     return (
-        <input
-            name={name}
-            type={type}
-            placeholder={placeholder}
-            value={value}
-            onChange={onChange}
-        />
+        <>
+            <label htmlFor="">{label}</label>
+            <input
+                name={name}
+                type={type}
+                placeholder={placeholder}
+                value={value}
+                onChange={onChange}
+            />
+        </>
+
     )
 }
 

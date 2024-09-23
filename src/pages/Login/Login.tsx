@@ -4,12 +4,18 @@ import './Login.scss';
 
 const Login: React.FC = () => {
 
-    const handleLogin = () => {
-        console.log('Login clicked');
-    }
+    const fields = [
+        { name: 'username', label: 'Username', type: 'text', placeholder: 'Enter your username', required: true },
+        { name: 'password', label: 'Password', type: 'password', placeholder: '********', required: true },
+    ];
+
+    const handleLogin = (data: { [key: string]: string }) => {
+        console.log('Login data:', data);
+    };
+
 
     return (
-        <UserForm type='login' handleSubmit={handleLogin} />
+        <UserForm fields={fields} submitLabel='Login' handleSubmit={handleLogin} />
     )
 }
 

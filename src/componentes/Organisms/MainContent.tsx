@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import UserDataPage from '../../pages/UserData/UserDataPage';
 import Login from '../../pages/Login/Login';
 import Register from '../../pages/Register/Register';
@@ -9,6 +9,7 @@ const MainContent: React.FC = () => {
 
     return (
         <Routes>
+            <Route path="/" element={<Navigate to="/login" />} />
             <Route element={<ProtectedRoute />}>
                 <Route path="/user-info" Component={UserDataPage} />
             </Route>
