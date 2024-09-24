@@ -10,6 +10,7 @@ import './Button.scss'
  * @param {string} className - Clases CSS adicionales para personalizar el estilo.
  * @param {'small' | 'medium' | 'large'} size - Tamaño del botón.
  * @param {string} label - Texto del botón.
+ * @param {boolean} disabled - parametro para habilitar o no el boton.
  * @returns {JSX.Element} - Retorna el componente JSX del botón.
  */
 
@@ -21,6 +22,7 @@ interface ButtonTypeProps {
     className?: string;
     size?: 'small' | 'medium' | 'large';
     label: string;
+    disabled?: boolean;
 }
 
 const Button: React.FC<ButtonTypeProps> = ({
@@ -31,6 +33,7 @@ const Button: React.FC<ButtonTypeProps> = ({
     size,
     className,
     label,
+    disabled,
 }) => {
     const buttonContent = children || label
     return (
@@ -45,6 +48,7 @@ const Button: React.FC<ButtonTypeProps> = ({
             }
             onClick={onClick}
             type={type}
+            disabled={disabled}
         >
             {buttonContent}
         </button>

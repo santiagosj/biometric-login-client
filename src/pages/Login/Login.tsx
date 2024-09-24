@@ -13,9 +13,12 @@ const Login: React.FC = () => {
         console.log('Login data:', data);
     };
 
-
     return (
-        <UserForm fields={fields} submitLabel='Login' handleSubmit={handleLogin} />
+        <UserForm
+            fields={fields}
+            submitLabel='Login'
+            handleSubmit={handleLogin}
+        />
     )
 }
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Input from "../../Atoms/Input/Input";
 import Button from "../../Atoms/Button/Button";
 import "./UserForm.scss";
@@ -54,6 +54,8 @@ const UserForm: React.FC<UserFormProps> = ({ fields, submitLabel, handleSubmit }
 
     const [formData, setFormData] = useState(initialState);
     const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
+    const [isFormValid, setIsFormValid] = useState(false);
+    const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
 
     /**
      * Manejador de cambios de los campos del formulario.
@@ -66,7 +68,38 @@ const UserForm: React.FC<UserFormProps> = ({ fields, submitLabel, handleSubmit }
             ...formData,
             [name]: value,
         });
+
+        setTouched({
+            ...touched,
+            [name]: true,
+        });
+
+        validateInputField(name, value);
+
     };
+
+    /**
+   * Valida un campo individual en función de su valor y reglas de validación.
+   * 
+   * @param {string} name - El nombre del campo que se está validando.
+   * @param {string} value - El valor actual del campo.
+   */
+
+    const validateInputField = (name: string, value: string) => {
+        const field = fields.find((field) => field.name === name);
+        let error = null;
+
+        if (field?.required && !value) {
+            error = `${field.label} is required.`;
+        } else if (field?.validation) {
+            error = field.validation(value)
+        }
+
+        setErrors(prevErrors => ({
+            ...prevErrors,
+            [name]: error,
+        }));
+    }
 
     /**
      * Valida el formulario revisando los campos requeridos y las validaciones personalizadas.
@@ -86,6 +119,11 @@ const UserForm: React.FC<UserFormProps> = ({ fields, submitLabel, handleSubmit }
         setErrors(newErrors);
         return !Object.values(newErrors).some(error => error !== null);
     };
+
+    useEffect(() => {
+        const isValid = validateForm();
+        setIsFormValid(isValid);
+    }, [formData])
 
     /**
      * Manejador del submit del formulario.
@@ -111,10 +149,14 @@ const UserForm: React.FC<UserFormProps> = ({ fields, submitLabel, handleSubmit }
                         value={formData[field.name]}
                         onChange={handleInputChange}
                     />
-                    {errors[field.name] && <p style={{ color: 'red' }}>{errors[field.name]}</p>}
+                    {touched[field.name] && errors[field.name] && <p style={{ color: 'red' }}>{errors[field.name]}</p>}
                 </div>
             ))}
-            <Button type="submit" label={submitLabel} />
+            <Button
+                type="submit"
+                label={submitLabel}
+                disabled={!isFormValid}
+            />
         </form>
     );
 };

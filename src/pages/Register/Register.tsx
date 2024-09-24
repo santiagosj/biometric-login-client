@@ -17,7 +17,11 @@ const Register: React.FC = () => {
     };
 
     return (
-        <UserForm fields={fields} submitLabel='Register' handleSubmit={handleRegister} />
+        <UserForm
+            fields={fields}
+            submitLabel='Register'
+            handleSubmit={handleRegister}
+        />
     )
 }
 
